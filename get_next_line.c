@@ -6,92 +6,65 @@
 /*   By: zmartine <zmartine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/23 11:34:37 by zmartine          #+#    #+#             */
-/*   Updated: 2023/03/03 13:11:32 by zmartine         ###   ########.fr       */
+/*   Updated: 2023/03/10 10:36:51 by zmartine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
+#include <unistd.h>
 
-int	check_new_line(char *str);
+char	*ft_read_left_str(int fd, char *left_str)
+{
+	char	*buff;
+	int		nr_bytes;
+
+	buff = malloc((BUFFER_SIZE + 1) * sizeof(char));
+	if (!buff)
+		return (NULL);
+	nr_bytes = 1;
+	while (!ft_strchr(left_str, '\n') && nr_bytes != 0)
+	{
+		nr_bytes = read(fd, buff, BUFFER_SIZE);
+		if (nr_bytes == -1)
+		{
+			free(left_str);
+			free(buff);
+			return (NULL);
+		}
+		buff[nr_bytes] = '\0';
+		left_str = ft_strjoin(left_str, buff);
+	}
+	free(buff);
+	return (left_str);
+}
 
 char	*get_next_line(int fd)
 {
-	char		buf[BUFFER_SIZE + 1];
-	int			i;
-	static char	*box;
 	char		*line;
-	char		*aux;
-	int			num_read;
+	static char	*left_str;
 
 	if (fd < 0 || BUFFER_SIZE <= 0)
+		return (0);
+	left_str = ft_read_left_str(fd, left_str);
+	if (!left_str)
 		return (NULL);
-	i = 0;
-	num_read = 0;
-	line = NULL;
-	line = calloc(1, sizeof(char));
-	if (box != NULL)
-	{
-		free(line);
-		line = ft_strdup(box);
-		free(box);
-		box = NULL;
-	}
-	while (i == 0 || check_new_line(line) == 0)
-	{
-		num_read = read(fd, buf, BUFFER_SIZE);
-		if (num_read <= 0)
-			break ;
-		buf[num_read] = '\0';
-		aux = ft_strdup(line);
-		free(line);
-		line = ft_strjoin(aux, buf);
-		free(aux);
-		i++;
-	}
-	aux = ft_strdup(line);
-	i = check_new_line(aux);
-	if (i != 0)
-	{
-		line[i + 1] = '\0';
-		box = ft_strdup(aux + i + 1);
-	}
-	free(aux);
-	if (line[0] == '\0')
-	{
-		free(line);
-		return (NULL);
-	}
+	line = ft_get_line(left_str);
+	left_str = ft_new_left_str(left_str);
 	return (line);
 }
 
-int	check_new_line(char *str)
-{
-	int	i;
+// int	main(void)
+// {
+// 	int		fd;
+// 	char	*str;
 
-	i = 0;
-	if (str[0] == '\n')
-		return (1);
-	while (str[i])
-	{
-		if (str[i] == '\n')
-			return (i);
-		i++;
-	}
-	return (0);
-}
-
-/* int	main(void)
-{
-	int		fd;
-	char	*str;
-
-	fd = open("multiple_nlx5.txt", O_RDONLY);
-	str = get_next_line(fd);
-	while (str)
-	{
-		printf("Linea: %s\n", str);
-		free(str);
-		str = get_next_line(fd);
-	}
-	return (0);
-} */
+// 	fd = open("multiple_nlx5.txt", O_RDONLY);
+// 	str = get_next_line(fd);
+// 	while (str)
+// 	{
+// 		printf("Linea: %s\n", str);
+// 		free(str);
+// 		str = get_next_line(fd);
+// 	}
+// 	return (0);
+// }
